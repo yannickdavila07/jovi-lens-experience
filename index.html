@@ -27,6 +27,38 @@
                 <button type="submit" id="btn-entrar">Iniciar Configuração</button>
             </form>
         </section>
+        
+        <section id="onboarding-section" class="hidden">
+            <h2>Personalize sua Experiência</h2>
+            <p>Responda rápido para fins de pesquisa, responda a pergunta da melhor forma:</p>
+            
+            <div id="questionario">
+                <p id="pergunta-atual">Como você mais utiliza a câmera?</p>
+                <div class="options">
+                    <button class="opt-btn" data-value="doc">Digitalizar Documentos</button>
+                    <button class="opt-btn" data-value="social">Redes Sociais</button>
+                    <button class="opt-btn" data-value="aula">Fotos de Lousa/Slides</button>
+                </div>
+            </div>
+        </section>
+        
+        <section id="camera-section" class="hidden">
+            <header>
+                <span id="modo-atual">Modo: Padrão</span>
+            </header>
+            <div class="viewport">
+                <img src="scr/assents/estudos.jpg" id="camera-preview" alt="Preview da Câmera">
+                <div id="feedback-balao" class="hidden">
+                    <p id="feedback-texto"></p>
+                </div>
+            </div>
+            <div class="camera-controls">
+                <button id="btn-comparar">Clique Aqui para ver com o recurso!</button>
+                <div class="shutter-row">
+                    <button id="btn-shutter"></button>
+                </div>
+            </div>
+        </section>
     </main>
     <script src="scr/js/script.js"></script>
 </body>
