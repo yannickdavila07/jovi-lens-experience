@@ -88,14 +88,6 @@ document.getElementById('btn-shutter').addEventListener('click', () => {
 
 
 
-
-
-
-
-
-
-
-
 const interativoSection = document.getElementById('interativo-section');
 const quizContainer = document.getElementById('quiz-container');
 
