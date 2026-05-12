@@ -10,8 +10,8 @@ const btnComparar = document.getElementById('btn-comparar');
 const modoAtual = document.getElementById('modo-atual');
 
 const recursosCamera = {
-   padrao: "scr/assents/foto-sem-recurso.jpg",
-   otimizado: "scr/assents/fotoexemplo.jpg"
+   padrao: "src/assents/foto-sem-recurso.jpg",
+   otimizado: "src/assents/fotoexemplo.jpg"
 };
 
 loginForm.addEventListener('submit', (e) => {
