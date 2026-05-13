@@ -144,3 +144,295 @@ btnIrParaFeedback.onclick = () => {
 };
 
 document.querySelector('.camera-controls').appendChild(btnIrParaFeedback);
+
+
+const botoesCard = document.querySelectorAll('.modo-card');
+botoesCard.forEach(function(card) {
+    card.addEventListener('click', function() {
+        const modo = card.getAttribute('data-modo');
+        abrirModo(modo);
+    });
+});
+
+
+function abrirModo(modo) {
+    modoSelecionado = modo;
+    const dados = modos[modo];
+
+
+    
+    slideIconeTopo.innerHTML = dados.icone;
+    slideTitulo.innerText    = dados.titulo;
+    slideDescricao.innerText = dados.descricao;
+
+
+    infoCardsGrid.innerHTML = "";
+    dados.cards.forEach(function(card) {
+        const div = document.createElement('div');
+        div.className = 'info-card-item';
+        div.innerHTML =
+            '<span class="card-icon">' + card.icon + '</span>' +
+            '<span class="card-label">' + card.label + '</span>' +
+            '<span class="card-valor">' + card.valor + '</span>';
+        infoCardsGrid.appendChild(div);
+    });
+
+
+    slideDica.innerText = dados.dica;
+
+
+    
+    slideQuando.innerText = dados.quando;
+
+
+    slideSituacoes.innerHTML = "";
+    dados.situacoes.forEach(function(s) {
+        const li = document.createElement('li');
+        li.innerText = s;
+        slideSituacoes.appendChild(li);
+    });
+
+
+    slideAviso.innerText = dados.aviso;
+
+
+    
+    modoAtual.innerText = "Modo: " + dados.titulo;
+
+
+    
+    if (dados.temScanner) {
+        slideScanner.style.display = "";
+    } else {
+        slideScanner.style.display = "none";
+    }
+
+
+    construirDots();
+    irParaSlide(0);
+    iniciarCamera(videoAntes, 'antes');
+    mostrarSecao(cameraSection);
+}
+
+btnVoltar.addEventListener('click', function() {
+    pararCameras();
+    mostrarSecao(modosSection);
+    feedbackBalao.classList.add('hidden');
+    fotoAntes.classList.add('hidden');
+    fotoDepois.classList.add('hidden');
+    videoAntes.classList.remove('hidden');
+    videoDepois.classList.remove('hidden');
+    resultadoScanner.innerText = "O texto detectado aparecera aqui...";
+});
+
+function construirDots() {
+    dotsContainer.innerHTML = "";
+    const slidesVisiveis = document.querySelectorAll('.slide:not([style*="display: none"])');
+    slidesVisiveis.forEach(function(slide, i) {
+        const dot = document.createElement('span');
+        dot.classList.add('dot');
+        if (i === 0) dot.classList.add('active');
+        dot.addEventListener('click', function() {
+            irParaSlide(i);
+        });
+        dotsContainer.appendChild(dot);
+    });
+}
+
+
+function irParaSlide(index) {
+    const slidesVisiveis = Array.from(document.querySelectorAll('.slide:not([style*="display: none"])'));
+    const dots = document.querySelectorAll('.dot');
+
+
+    if (index < 0) index = slidesVisiveis.length - 1;
+    if (index >= slidesVisiveis.length) index = 0;
+
+
+    slidesVisiveis.forEach(function(s) { s.classList.remove('active'); });
+    dots.forEach(function(d) { d.classList.remove('active'); });
+
+
+    slidesVisiveis[index].classList.add('active');
+    if (dots[index]) dots[index].classList.add('active');
+
+
+    slideAtual = index;
+
+
+    const tituloSlide = slidesVisiveis[index].querySelector('h3');
+    if (tituloSlide && tituloSlide.innerText.includes('Antes vs Depois')) {
+        iniciarCamera(videoAntes, 'antes');
+    }
+
+
+    if (slidesVisiveis[index].id === 'slide-scanner') {
+        iniciarCameraScanner();
+    }
+}
+
+
+btnNext.addEventListener('click', function() {
+    irParaSlide(slideAtual + 1);
+});
+
+
+btnPrev.addEventListener('click', function() {
+    irParaSlide(slideAtual - 1);
+});
+
+async function iniciarCamera(videoEl, tipo) {
+    try {
+        const midia = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false
+        });
+        videoEl.srcObject = midia;
+        videoEl.play();
+        if (tipo === 'antes') streamAntes = midia;
+        if (tipo === 'depois') streamDepois = midia;
+    } catch (erro) {
+        console.error("Erro ao acessar camera:", erro);
+        alert("Nao foi possivel acessar a camera. Verifique as permissoes do navegador.");
+    }
+}
+
+
+async function iniciarCameraScanner() {
+    try {
+        const midia = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false
+        });
+        videoScanner.srcObject = midia;
+        videoScanner.play();
+        streamScanner = midia;
+    } catch (erro) {
+        console.error("Erro camera scanner:", erro);
+        resultadoScanner.innerText = "Erro ao acessar a camera para o scanner.";
+    }
+}
+
+
+function pararCameras() {
+    if (streamAntes)   { streamAntes.getTracks().forEach(function(t)   { t.stop(); }); streamAntes = null; }
+    if (streamDepois)  { streamDepois.getTracks().forEach(function(t)  { t.stop(); }); streamDepois = null; }
+    if (streamScanner) { streamScanner.getTracks().forEach(function(t) { t.stop(); }); streamScanner = null; }
+}
+
+
+
+
+// TIRAR FOTO
+
+
+btnFotoAntes.addEventListener('click', function() {
+    tirarFoto(videoAntes, canvasAntes, fotoAntes, 'antes');
+    setTimeout(function() {
+        iniciarCamera(videoDepois, 'depois');
+    }, 500);
+});
+
+
+btnFotoDepois.addEventListener('click', function() {
+    tirarFoto(videoDepois, canvasDepois, fotoDepois, 'depois');
+    const dadosModo = modos[modoSelecionado];
+    if (dadosModo) {
+        exibirFeedback(dadosModo.feedbackDepois);
+    }
+});
+
+
+function tirarFoto(videoEl, canvasEl, imgEl, tipo) {
+    const ctx = canvasEl.getContext('2d');
+    canvasEl.width  = videoEl.videoWidth;
+    canvasEl.height = videoEl.videoHeight;
+
+
+    if (tipo === 'depois') {
+        ctx.filter = obterFiltroModo(modoSelecionado);
+    } else {
+        ctx.filter = 'none';
+    }
+
+
+    ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+
+
+    const dataURL = canvasEl.toDataURL('image/jpeg');
+    imgEl.src = dataURL;
+    videoEl.classList.add('hidden');
+    imgEl.classList.remove('hidden');
+
+
+    if (tipo === 'antes' && streamAntes) {
+        streamAntes.getTracks().forEach(function(t) { t.stop(); });
+    }
+    if (tipo === 'depois' && streamDepois) {
+        streamDepois.getTracks().forEach(function(t) { t.stop(); });
+    }
+}
+
+
+function obterFiltroModo(modo) {
+    const filtros = {
+        automatico: 'brightness(1.1) contrast(1.05)',
+        retrato:    'brightness(1.05) contrast(1.1)',
+        paisagem:   'contrast(1.2) saturate(1.3)',
+        noturno:    'brightness(1.6) contrast(0.9)',
+        comida:     'saturate(1.8) brightness(1.1)',
+        macro:      'contrast(1.3) saturate(1.1)',
+        acao:       'contrast(1.15) brightness(1.05)',
+        estudante:  'grayscale(0.3) contrast(1.4)',
+        documento:  'grayscale(1) contrast(1.6)'
+    };
+    return filtros[modo] || 'none';
+}
+
+function exibirFeedback(mensagem) {
+    feedbackTexto.innerText = mensagem;
+    feedbackBalao.classList.remove('hidden');
+    setTimeout(function() {
+        feedbackBalao.classList.add('hidden');
+    }, 5000);
+}
+
+
+// SCANNER OCR (modo documento)
+btnEscanear.addEventListener('click', async function() {
+    btnEscanear.disabled = true;
+    resultadoScanner.innerText = "Fazendo a leitura... aguarde";
+
+
+    const ctx = canvasScanner.getContext('2d');
+    canvasScanner.width  = videoScanner.videoWidth;
+    canvasScanner.height = videoScanner.videoHeight;
+
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.filter = 'contrast(1.2) grayscale(1)';
+    ctx.drawImage(videoScanner, 0, 0, canvasScanner.width, canvasScanner.height);
+
+
+    try {
+        const resultado = await Tesseract.recognize(canvasScanner, 'por');
+        const texto = resultado.data.text.trim();
+        resultadoScanner.innerText = texto.length > 0
+            ? texto
+            : "Nao foi possivel identificar texto. Tente aproximar mais.";
+    } catch (erro) {
+        console.error(erro);
+        resultadoScanner.innerText = "Erro ao processar a imagem.";
+    } finally {
+        btnEscanear.disabled = false;
+    }
+});
+
+// UTILITARIO: mostrar secao
+function mostrarSecao(secaoAlvo) {
+    const secoes = [loginSection, onboardingSection, modosSection, cameraSection];
+    secoes.forEach(function(s) {
+        s.classList.add('hidden');
+    });
+    secaoAlvo.classList.remove('hidden');
+}
