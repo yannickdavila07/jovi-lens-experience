@@ -388,3 +388,51 @@ function obterFiltroModo(modo) {
     };
     return filtros[modo] || 'none';
 }
+
+function exibirFeedback(mensagem) {
+    feedbackTexto.innerText = mensagem;
+    feedbackBalao.classList.remove('hidden');
+    setTimeout(function() {
+        feedbackBalao.classList.add('hidden');
+    }, 5000);
+}
+
+
+// SCANNER OCR (modo documento)
+btnEscanear.addEventListener('click', async function() {
+    btnEscanear.disabled = true;
+    resultadoScanner.innerText = "Fazendo a leitura... aguarde";
+
+
+    const ctx = canvasScanner.getContext('2d');
+    canvasScanner.width  = videoScanner.videoWidth;
+    canvasScanner.height = videoScanner.videoHeight;
+
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.filter = 'contrast(1.2) grayscale(1)';
+    ctx.drawImage(videoScanner, 0, 0, canvasScanner.width, canvasScanner.height);
+
+
+    try {
+        const resultado = await Tesseract.recognize(canvasScanner, 'por');
+        const texto = resultado.data.text.trim();
+        resultadoScanner.innerText = texto.length > 0
+            ? texto
+            : "Nao foi possivel identificar texto. Tente aproximar mais.";
+    } catch (erro) {
+        console.error(erro);
+        resultadoScanner.innerText = "Erro ao processar a imagem.";
+    } finally {
+        btnEscanear.disabled = false;
+    }
+});
+
+// UTILITARIO: mostrar secao
+function mostrarSecao(secaoAlvo) {
+    const secoes = [loginSection, onboardingSection, modosSection, cameraSection];
+    secoes.forEach(function(s) {
+        s.classList.add('hidden');
+    });
+    secaoAlvo.classList.remove('hidden');
+}
