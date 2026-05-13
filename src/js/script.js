@@ -144,3 +144,72 @@ btnIrParaFeedback.onclick = () => {
 };
 
 document.querySelector('.camera-controls').appendChild(btnIrParaFeedback);
+
+
+const botoesCard = document.querySelectorAll('.modo-card');
+botoesCard.forEach(function(card) {
+    card.addEventListener('click', function() {
+        const modo = card.getAttribute('data-modo');
+        abrirModo(modo);
+    });
+});
+
+
+function abrirModo(modo) {
+    modoSelecionado = modo;
+    const dados = modos[modo];
+
+
+    
+    slideIconeTopo.innerHTML = dados.icone;
+    slideTitulo.innerText    = dados.titulo;
+    slideDescricao.innerText = dados.descricao;
+
+
+    infoCardsGrid.innerHTML = "";
+    dados.cards.forEach(function(card) {
+        const div = document.createElement('div');
+        div.className = 'info-card-item';
+        div.innerHTML =
+            '<span class="card-icon">' + card.icon + '</span>' +
+            '<span class="card-label">' + card.label + '</span>' +
+            '<span class="card-valor">' + card.valor + '</span>';
+        infoCardsGrid.appendChild(div);
+    });
+
+
+    slideDica.innerText = dados.dica;
+
+
+    
+    slideQuando.innerText = dados.quando;
+
+
+    slideSituacoes.innerHTML = "";
+    dados.situacoes.forEach(function(s) {
+        const li = document.createElement('li');
+        li.innerText = s;
+        slideSituacoes.appendChild(li);
+    });
+
+
+    slideAviso.innerText = dados.aviso;
+
+
+    
+    modoAtual.innerText = "Modo: " + dados.titulo;
+
+
+    
+    if (dados.temScanner) {
+        slideScanner.style.display = "";
+    } else {
+        slideScanner.style.display = "none";
+    }
+
+
+    construirDots();
+    irParaSlide(0);
+    iniciarCamera(videoAntes, 'antes');
+    mostrarSecao(cameraSection);
+}
