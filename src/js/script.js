@@ -281,3 +281,110 @@ btnPrev.addEventListener('click', function() {
     irParaSlide(slideAtual - 1);
 });
 
+async function iniciarCamera(videoEl, tipo) {
+    try {
+        const midia = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false
+        });
+        videoEl.srcObject = midia;
+        videoEl.play();
+        if (tipo === 'antes') streamAntes = midia;
+        if (tipo === 'depois') streamDepois = midia;
+    } catch (erro) {
+        console.error("Erro ao acessar camera:", erro);
+        alert("Nao foi possivel acessar a camera. Verifique as permissoes do navegador.");
+    }
+}
+
+
+async function iniciarCameraScanner() {
+    try {
+        const midia = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false
+        });
+        videoScanner.srcObject = midia;
+        videoScanner.play();
+        streamScanner = midia;
+    } catch (erro) {
+        console.error("Erro camera scanner:", erro);
+        resultadoScanner.innerText = "Erro ao acessar a camera para o scanner.";
+    }
+}
+
+
+function pararCameras() {
+    if (streamAntes)   { streamAntes.getTracks().forEach(function(t)   { t.stop(); }); streamAntes = null; }
+    if (streamDepois)  { streamDepois.getTracks().forEach(function(t)  { t.stop(); }); streamDepois = null; }
+    if (streamScanner) { streamScanner.getTracks().forEach(function(t) { t.stop(); }); streamScanner = null; }
+}
+
+
+
+
+// TIRAR FOTO
+
+
+btnFotoAntes.addEventListener('click', function() {
+    tirarFoto(videoAntes, canvasAntes, fotoAntes, 'antes');
+    setTimeout(function() {
+        iniciarCamera(videoDepois, 'depois');
+    }, 500);
+});
+
+
+btnFotoDepois.addEventListener('click', function() {
+    tirarFoto(videoDepois, canvasDepois, fotoDepois, 'depois');
+    const dadosModo = modos[modoSelecionado];
+    if (dadosModo) {
+        exibirFeedback(dadosModo.feedbackDepois);
+    }
+});
+
+
+function tirarFoto(videoEl, canvasEl, imgEl, tipo) {
+    const ctx = canvasEl.getContext('2d');
+    canvasEl.width  = videoEl.videoWidth;
+    canvasEl.height = videoEl.videoHeight;
+
+
+    if (tipo === 'depois') {
+        ctx.filter = obterFiltroModo(modoSelecionado);
+    } else {
+        ctx.filter = 'none';
+    }
+
+
+    ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+
+
+    const dataURL = canvasEl.toDataURL('image/jpeg');
+    imgEl.src = dataURL;
+    videoEl.classList.add('hidden');
+    imgEl.classList.remove('hidden');
+
+
+    if (tipo === 'antes' && streamAntes) {
+        streamAntes.getTracks().forEach(function(t) { t.stop(); });
+    }
+    if (tipo === 'depois' && streamDepois) {
+        streamDepois.getTracks().forEach(function(t) { t.stop(); });
+    }
+}
+
+
+function obterFiltroModo(modo) {
+    const filtros = {
+        automatico: 'brightness(1.1) contrast(1.05)',
+        retrato:    'brightness(1.05) contrast(1.1)',
+        paisagem:   'contrast(1.2) saturate(1.3)',
+        noturno:    'brightness(1.6) contrast(0.9)',
+        comida:     'saturate(1.8) brightness(1.1)',
+        macro:      'contrast(1.3) saturate(1.1)',
+        acao:       'contrast(1.15) brightness(1.05)',
+        estudante:  'grayscale(0.3) contrast(1.4)',
+        documento:  'grayscale(1) contrast(1.6)'
+    };
+    return filtros[modo] || 'none';
+}
