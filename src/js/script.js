@@ -224,3 +224,60 @@ btnVoltar.addEventListener('click', function() {
     videoDepois.classList.remove('hidden');
     resultadoScanner.innerText = "O texto detectado aparecera aqui...";
 });
+
+function construirDots() {
+    dotsContainer.innerHTML = "";
+    const slidesVisiveis = document.querySelectorAll('.slide:not([style*="display: none"])');
+    slidesVisiveis.forEach(function(slide, i) {
+        const dot = document.createElement('span');
+        dot.classList.add('dot');
+        if (i === 0) dot.classList.add('active');
+        dot.addEventListener('click', function() {
+            irParaSlide(i);
+        });
+        dotsContainer.appendChild(dot);
+    });
+}
+
+
+function irParaSlide(index) {
+    const slidesVisiveis = Array.from(document.querySelectorAll('.slide:not([style*="display: none"])'));
+    const dots = document.querySelectorAll('.dot');
+
+
+    if (index < 0) index = slidesVisiveis.length - 1;
+    if (index >= slidesVisiveis.length) index = 0;
+
+
+    slidesVisiveis.forEach(function(s) { s.classList.remove('active'); });
+    dots.forEach(function(d) { d.classList.remove('active'); });
+
+
+    slidesVisiveis[index].classList.add('active');
+    if (dots[index]) dots[index].classList.add('active');
+
+
+    slideAtual = index;
+
+
+    const tituloSlide = slidesVisiveis[index].querySelector('h3');
+    if (tituloSlide && tituloSlide.innerText.includes('Antes vs Depois')) {
+        iniciarCamera(videoAntes, 'antes');
+    }
+
+
+    if (slidesVisiveis[index].id === 'slide-scanner') {
+        iniciarCameraScanner();
+    }
+}
+
+
+btnNext.addEventListener('click', function() {
+    irParaSlide(slideAtual + 1);
+});
+
+
+btnPrev.addEventListener('click', function() {
+    irParaSlide(slideAtual - 1);
+});
+
